@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 import { v4 as uuidv4 } from "uuid";
 
 import {
@@ -14,13 +15,28 @@ export function Playground() {
   const { sendMessage } = useChatInteract();
   const { messages } = useChatMessages();
 
-  const handleSendMessage = () => {
-    const content = inputValue.trim();
-    if (content) {
+  const suggestedActions = [
+    { title: "View all", label: "my cameras", action: "View all my cameras" },
+    { title: "Show me", label: "my smart home hub", action: "Show me my smart home hub" },
+    {
+      title: "How much",
+      label: "electricity have I used this month?",
+      action: "Show electricity usage",
+    },
+    {
+      title: "How much",
+      label: "water have I used this month?",
+      action: "Show water usage",
+    },
+  ];
+
+  const handleSendMessage = (content?: string) => {
+    const messageContent = content ? content.trim() : inputValue.trim();
+    if (messageContent) {
       const message = {
         name: "user",
         type: "user_message" as const,
-        output: content,
+        output: messageContent,
       };
       sendMessage(message, []);
       setInputValue("");
@@ -54,6 +70,30 @@ export function Playground() {
           {messages.map((message) => renderMessage(message))}
         </div>
       </div>
+
+      <div className="grid sm:grid-cols-2 gap-2 w-full px-4 md:px-0 mx-auto md:max-w-[500px] mb-4">
+        {messages.length === 0 &&
+          suggestedActions.map((action, index) => (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.01 * index }}
+              key={index}
+              className={index > 1 ? "hidden sm:block" : "block"}
+            >
+              <button
+                onClick={() => handleSendMessage(action.action)}
+                className="w-full text-left border border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-300 rounded-lg p-2 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex flex-col"
+              >
+                <span className="font-medium">{action.title}</span>
+                <span className="text-zinc-500 dark:text-zinc-400">
+                  {action.label}
+                </span>
+              </button>
+            </motion.div>
+          ))}
+      </div>
+
       <div className="border-t p-4 bg-white dark:bg-gray-800">
         <div className="flex items-center space-x-2">
           <Input
@@ -69,7 +109,7 @@ export function Playground() {
               }
             }}
           />
-          <Button onClick={handleSendMessage} type="submit">
+          <Button onClick={() => handleSendMessage()} type="submit">
             Send
           </Button>
         </div>
