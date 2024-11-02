@@ -10,7 +10,7 @@ import { useRecoilValue, useSetRecoilState } from "recoil";
 import Login from "./components/Login";
 import UserManagement from "./components/UserManagement";
 import { userState } from "./atoms/userAtom";
-import { ChatSidebar } from "./components/sidebar/Sidebar";
+import { ChatSidebar } from "./components/sidebar/ChatSidebar";
 
 const userEnv = {}
 
