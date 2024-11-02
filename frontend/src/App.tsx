@@ -1,37 +1,38 @@
-import { useEffect } from "react";
+import { useEffect } from "react"
+import { sessionState, useChatSession } from "@chainlit/react-client"
+import { Playground } from "./components/playground"
+import { useRecoilValue } from "recoil"
+import { ChatSidebar } from "./components/sidebar/Sidebar"
 
-import { sessionState, useChatSession } from "@chainlit/react-client";
-import { Playground } from "./components/playground";
-import { useRecoilValue } from "recoil";
-
-const userEnv = {};
+const userEnv = {}
 
 function App() {
-  const { connect } = useChatSession();
-  const session = useRecoilValue(sessionState);
+  const { connect } = useChatSession()
+  const session = useRecoilValue(sessionState)
   useEffect(() => {
     if (session?.socket.connected) {
-      return;
+      return
     }
     fetch("http://localhost:80/custom-auth")
       .then((res) => {
-        return res.json();
+        return res.json()
       })
       .then((data) => {
         connect({
           userEnv,
           accessToken: `Bearer: ${data.token}`,
-        });
-      });
-  }, [connect]);
+        })
+      })
+  }, [connect])
 
   return (
-    <>
-      <div>
+    <div className="flex h-screen">
+      <ChatSidebar />
+      <div className="flex-1">
         <Playground />
       </div>
-    </>
-  );
+    </div>
+  )
 }
 
-export default App;
+export default App
