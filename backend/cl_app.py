@@ -16,7 +16,7 @@ load_dotenv()
 async def on_chat_start():
     llm = ChatBedrockConverse(
         model="anthropic.claude-3-sonnet-20240229-v1:0",
-        region_name="ca-central-1",
+        region_name="us-west-2",
         temperature=0,
         max_tokens=None
     )
