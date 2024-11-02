@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { v4 as uuidv4 } from "uuid";
 
 import {
@@ -11,9 +12,9 @@ import {
 import { useState } from "react";
 
 export function Playground() {
-  const [inputValue, setInputValue] = useState("");
-  const { sendMessage } = useChatInteract();
-  const { messages } = useChatMessages();
+  const [inputValue, setInputValue] = useState("")
+  const { sendMessage } = useChatInteract()
+  const { messages } = useChatMessages()
 
   const suggestedActions = [
     { title: "View all", label: "my cameras", action: "View all my cameras" },
@@ -41,35 +42,35 @@ export function Playground() {
       sendMessage(message, []);
       setInputValue("");
     }
-  };
+  }
 
   const renderMessage = (message: IStep) => {
     const dateOptions: Intl.DateTimeFormatOptions = {
       hour: "2-digit",
       minute: "2-digit",
-    };
+    }
     const date = new Date(message.createdAt).toLocaleTimeString(
       undefined,
       dateOptions
-    );
+    )
     return (
-      <div key={message.id} className="flex items-start space-x-2">
+      <div key={message.id} className="flex items-start space-x-2 mb-4">
         <div className="w-20 text-sm text-green-500">{message.name}</div>
         <div className="flex-1 border rounded-lg p-2">
           <p className="text-black dark:text-white">{message.output}</p>
           <small className="text-xs text-gray-500">{date}</small>
         </div>
       </div>
-    );
-  };
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col">
-      <div className="flex-1 overflow-auto p-6">
+    <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900">
+      <ScrollArea className="flex-1 p-6">
         <div className="space-y-4">
           {messages.map((message) => renderMessage(message))}
         </div>
-      </div>
+      </ScrollArea>
 
       <div className="grid sm:grid-cols-2 gap-2 w-full px-4 md:px-0 mx-auto md:max-w-[500px] mb-4">
         {messages.length === 0 &&
@@ -105,7 +106,7 @@ export function Playground() {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyUp={(e) => {
               if (e.key === "Enter") {
-                handleSendMessage();
+                handleSendMessage()
               }
             }}
           />
@@ -115,5 +116,5 @@ export function Playground() {
         </div>
       </div>
     </div>
-  );
+  )
 }
