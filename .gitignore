@@ -2,4 +2,8 @@
 .env
 backend/venv
 backend/.env
+backend/__pycache__
+backend/.chainlit
+backend/.files
 frontend/node_modules
+OneDrive_2024-11-02.zip
