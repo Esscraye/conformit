@@ -40,7 +40,7 @@ async def on_message(message: cl.Message):
     runnable = cast(Runnable, cl.user_session.get(
         "runnable"))  # type: Runnable
 
-    msg = cl.Message(content="")
+    msg = cl.Message(content="test")
 
     async for chunk in runnable.astream(
         {"question": message.content},
