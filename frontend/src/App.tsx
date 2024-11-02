@@ -6,13 +6,13 @@ import {
   Navigate,
 } from "react-router-dom";
 import { sessionState, useChatSession } from "@chainlit/react-client";
-import { Playground } from "./components/playground";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import Login from "./components/Login";
 import UserManagement from "./components/UserManagement";
 import { userState } from "./atoms/userAtom";
+import { ChatSidebar } from "./components/sidebar/Sidebar";
 
-const userEnv = {};
+const userEnv = {}
 
 function App() {
   const { connect } = useChatSession();
@@ -73,11 +73,11 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/profile" element={<UserManagement />} />
-        <Route path="/chat" element={<Playground />} />
+        <Route path="/chat" element={<ChatSidebar />} />
         <Route path="/" element={<Navigate to="/chat" replace />} />
       </Routes>
     </Router>
   );
 }
 
-export default App;
+export default App
