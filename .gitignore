@@ -2,6 +2,8 @@
 .env
 backend/venv
 backend/.env
+backend/.venv
+backend/.idea
 backend/__pycache__
 backend/.chainlit
 backend/.files
