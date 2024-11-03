@@ -24,11 +24,18 @@ interface MessageLeo {
   timestamp: string;
 }
 
+const aiOptions = [
+  { value: 'anthropic.claude-3-sonnet-20240229-v1:0', label: 'claude-3' },
+  { value: 'meta.llama3-1-405b-instruct-v1:0', label: 'llama3.1 405b' },
+  { value: 'custom-ai', label: 'Custom AI' },
+];
+
 export function Playground({ initialChatId }: PlaygroundProps) {
   const user = useRecoilValue(userState);
   const [inputValue, setInputValue] = useState("");
+  const [selectedAI, setSelectedAI] = useState(aiOptions[0].value);
   const { messages } = useChatMessages();
-  const { sendMessage, clear } = useChatInteract();
+  const { sendMessage, clear, updateChatSettings } = useChatInteract();
   const { connect } = useChatSession();
   const [savedMessages, setSavedMessages] = useState<IStep[]>([]);
   const [chatId, setChatId] = useState(initialChatId);
@@ -147,6 +154,7 @@ export function Playground({ initialChatId }: PlaygroundProps) {
         type: "user_message" as const,
         output: messageContent,
         id: chatId,
+        ai: selectedAI,
       };
       sendMessage(message, []);
       const transformedMessage: IStep = {
@@ -218,6 +226,28 @@ export function Playground({ initialChatId }: PlaygroundProps) {
         return prev;
       });
     }
+  };
+
+  const handleChangeModel = async (modelName: string) => {
+    setSelectedAI(modelName);
+    // try {
+    //   const response = await fetch(`http://localhost:80/change-model`, {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify({ model_name: modelName }),
+    //   });
+    //   if (response.ok) {
+    //     const data = await response.json();
+    //     console.log(data);
+    //   } else {
+    //     console.error('Failed to change model');
+    //   }
+    // } catch (error) {
+    //   console.error('Error changing model:', error);
+    // }
+    updateChatSettings({ ai: modelName });
   };
 
   const renderMessage = (message: IStep) => {
@@ -308,6 +338,17 @@ export function Playground({ initialChatId }: PlaygroundProps) {
 
       <div className="border-t p-4 bg-white dark:bg-gray-800">
         <div className="flex items-center space-x-2">
+          <select
+            value={selectedAI}
+            onChange={(e) => handleChangeModel(e.target.value)}
+            className="border rounded p-2"
+          >
+            {aiOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
           <Input
             autoFocus
             className="flex-1"

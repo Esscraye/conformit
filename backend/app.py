@@ -22,7 +22,7 @@ from auth import (
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
 
-from cl_app import ( get_convesation_title_user, get_conversation_messages, delete_message_from_db)
+from cl_app import ( get_convesation_title_user, get_conversation_messages, delete_message_from_db, change_model)
 
 load_dotenv()
 
@@ -108,6 +108,17 @@ async def delete_message(chat_id: str, message_id: str):
             detail="Message not found",
         )
     return JSONResponse(content={"detail": "Message deleted successfully"})
+
+
+class ModelChangeRequest(BaseModel):
+    model_name: str
+
+@app.post("/change-model")
+async def change_model_endpoint(request: ModelChangeRequest):
+    model = request.model_name
+    print(model)
+    response = await change_model(model)
+    return response
 
 
 mount_chainlit(app=app, target="cl_app.py", path="/chainlit")

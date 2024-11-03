@@ -183,3 +183,29 @@ async def on_chat_end():
         await cl.Message(content="Chat history saved to DynamoDB").send()
     else:
         await cl.Message(content="No chat history to save").send()
+
+@cl.on_settings_update
+async def change_model(data):
+    print(data["ai"])
+    model_name = data["ai"]
+    user_session = cl.user_session.get("runnable")
+    if not user_session:
+        return {"detail": "Chainlit user session not found"}
+    
+    llm = ChatBedrockConverse(
+        model=model_name,
+        region_name="us-west-2",
+        temperature=0,
+        max_tokens=None
+    )
+    system_message = (
+        "Commence ta réponse par Bravo ! Tu as changé de modèle de langage."
+    )
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", system_message),
+            ("human", "{question}"),
+        ]
+    )
+    runnable = prompt | llm | StrOutputParser()
+    cl.user_session.set("runnable", runnable)
