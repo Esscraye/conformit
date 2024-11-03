@@ -1,6 +1,6 @@
-import React from 'react'
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { useEffect, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -11,9 +11,10 @@ import {
   SidebarFooter,
   SidebarProvider,
   SidebarInset,
-  SidebarTrigger,
-} from "@/components/ui/sidebar"
-import { MessageCircle, PlusCircle } from "lucide-react"
+  SidebarGroup,
+  SidebarGroupLabel,
+} from "@/components/ui/sidebar";
+import { MessageCircle } from "lucide-react";
 // import { useChatMessages, IStep } from "@chainlit/react-client"
 
 import {
@@ -23,14 +24,9 @@ import {
   ChevronsUpDown,
   CreditCard,
   LogOut,
-  Calendar, Home, Inbox, Search, Settings
-} from "lucide-react"
+} from "lucide-react";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import {
   DropdownMenu,
@@ -40,551 +36,89 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Separator } from '@/components/ui/separator'
-import { Playground } from '@/components/playground'
+} from "@/components/ui/dropdown-menu";
+import { Playground } from "@/components/playground";
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-}
+import { useNavigate } from "react-router-dom";
+import { useRecoilValue, useResetRecoilState, useSetRecoilState } from "recoil";
+import { userState } from "@/atoms/userAtom";
+import { useChatSession } from "@chainlit/react-client";
+
 
 
 export function ChatSidebar() {
-  const items = [
-    {
-      title: "Home",
-      url: "#",
-      icon: Home,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
-    {
-      title: "Home",
-      url: "#",
-      icon: Home,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
-    {
-      title: "Home",
-      url: "#",
-      icon: Home,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
-    {
-      title: "Home",
-      url: "#",
-      icon: Home,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
-    {
-      title: "Home",
-      url: "#",
-      icon: Home,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
-    {
-      title: "Home",
-      url: "#",
-      icon: Home,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
-    {
-      title: "Home",
-      url: "#",
-      icon: Home,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
-    {
-      title: "Home",
-      url: "#",
-      icon: Home,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
-    {
-      title: "Home",
-      url: "#",
-      icon: Home,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
-    {
-      title: "Home",
-      url: "#",
-      icon: Home,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
-    {
-      title: "Home",
-      url: "#",
-      icon: Home,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
-    {
-      title: "Home",
-      url: "#",
-      icon: Home,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
-    {
-      title: "Home",
-      url: "#",
-      icon: Home,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
-    {
-      title: "Home",
-      url: "#",
-      icon: Home,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
-    {
-      title: "Home",
-      url: "#",
-      icon: Home,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
-    {
-      title: "Home",
-      url: "#",
-      icon: Home,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
-    {
-      title: "Home",
-      url: "#",
-      icon: Home,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
-    {
-      title: "Home",
-      url: "#",
-      icon: Home,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
-    {
-      title: "Home",
-      url: "#",
-      icon: Home,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
-    {
-      title: "Home",
-      url: "#",
-      icon: Home,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
-    },
-  ]
+  const setUser = useSetRecoilState(userState);
+  const user = useRecoilValue(userState);
+  const resetUser = useResetRecoilState(userState);
+  const navigate = useNavigate();
+  const { disconnect } = useChatSession();
+  const [conversations, setConversations] = useState([]);
+  const [hasFetched, setHasFetched] = useState(false);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, [setUser]);
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    resetUser();
+    disconnect();
+    navigate("/login");
+  };
+
+  useEffect(() => {
+    const fetchConversations = async () => {
+      if (!user || !user.email || hasFetched) return; // Add null check for user and check if already fetched
+      try {
+        const response = await fetch("http://localhost:80/conversations", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: user.email }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setConversations(data.conversations);
+          setHasFetched(true); // Set hasFetched to true after fetching
+        } else {
+          console.error("Failed to fetch conversations");
+        }
+      } catch (error) {
+        console.error("Error fetching conversations:", error);
+      }
+    };
+
+    fetchConversations();
+  }, [user, hasFetched]);
+
+  if (!user) {
+    return <div>Chargement...</div>;
+  }
+
+  const handleChangeChat = (chatId: string) => {
+    setSelectedChatId(chatId);
+    localStorage.setItem("chatId", chatId);
+    setHasFetched(false);
+  }
 
   return (
     <SidebarProvider>
-    <Sidebar>
-      <SidebarHeader>
-        <h2 className="text-lg font-semibold">Chat History</h2>
-      </SidebarHeader>
-      <SidebarContent>
-          <ScrollArea className="h-[calc(100vh-5rem)]">
-            <SidebarMenu>
-                {/* {items.map(({ date, title }, index) => ( */}
-                {items.map(({title }, index) => (
-                <SidebarMenuItem key={index}>
-                    <SidebarMenuButton asChild>
-                    <Button variant="ghost" className="w-full justify-start">
-                        <MessageCircle className="mr-2 h-4 w-4" />
-                        <div className="flex flex-col items-start">
-                        <span className="font-medium">{title}</span>
-                        {/* <span className="text-xs text-muted-foreground">{date}</span> */}
-                        </div>
-                    </Button>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-                ))}
-            </SidebarMenu>
-          </ScrollArea>
-      </SidebarContent>
-      <SidebarFooter>
-      <SidebarMenu>
+      <Sidebar>
+        <SidebarHeader>
+          <h2 className="text-lg font-semibold">Chat History</h2>
+        </SidebarHeader>
+        <SidebarContent>
+          <NavConversations handleChangeChat={handleChangeChat} conversations={conversations} />
+        </SidebarContent>
+        <SidebarFooter>
+          <SidebarMenu>
             <SidebarMenuItem>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -593,19 +127,14 @@ export function ChatSidebar() {
                     className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                   >
                     <Avatar className="h-8 w-8 rounded-lg">
-                      <AvatarImage
-                        src={data.user.avatar}
-                        alt={data.user.name}
-                      />
+                      <AvatarImage src={user.avatar} alt={user.name} />
                       <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-semibold">
-                        {data.user.name}
+                        {user.name}
                       </span>
-                      <span className="truncate text-xs">
-                        {data.user.email}
-                      </span>
+                      <span className="truncate text-xs">{user.email}</span>
                     </div>
                     <ChevronsUpDown className="ml-auto size-4" />
                   </SidebarMenuButton>
@@ -619,21 +148,16 @@ export function ChatSidebar() {
                   <DropdownMenuLabel className="p-0 font-normal">
                     <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                       <Avatar className="h-8 w-8 rounded-lg">
-                        <AvatarImage
-                          src={data.user.avatar}
-                          alt={data.user.name}
-                        />
+                        <AvatarImage src={user.avatar} alt={user.name} />
                         <AvatarFallback className="rounded-lg">
-                          CN
+                          TU
                         </AvatarFallback>
                       </Avatar>
                       <div className="grid flex-1 text-left text-sm leading-tight">
                         <span className="truncate font-semibold">
-                          {data.user.name}
+                          {user.name}
                         </span>
-                        <span className="truncate text-xs">
-                          {data.user.email}
-                        </span>
+                        <span className="truncate text-xs">{user.email}</span>
                       </div>
                     </div>
                   </DropdownMenuLabel>
@@ -660,7 +184,7 @@ export function ChatSidebar() {
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout}>
                     <LogOut />
                     Log out
                   </DropdownMenuItem>
@@ -668,22 +192,44 @@ export function ChatSidebar() {
               </DropdownMenu>
             </SidebarMenuItem>
           </SidebarMenu>
-      </SidebarFooter>
-    </Sidebar>
-    <SidebarInset>
-
-      <header className="flex h-16 shrink-0 items-center gap-2">
-        <div className="flex items-center gap-2 px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <Button variant="ghost" className="">
-            <PlusCircle className="" />
-          </Button>
-        </div>
-      </header>
-      <Playground />
-
-    </SidebarInset>
+        </SidebarFooter>
+      </Sidebar>
+      <SidebarInset>
+        <Playground initialChatId={selectedChatId || uuidv4()} />
+      </SidebarInset>
     </SidebarProvider>
+  );
+}
+
+function NavConversations({
+  handleChangeChat,
+  conversations,
+}: {
+  conversations: {
+    title: string;
+    chatId: string;    
+  }[];
+  handleChangeChat: (chatId: string) => void;
+}) {
+  return (
+    <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+      <SidebarGroupLabel>Aujourd'hui</SidebarGroupLabel>
+          <SidebarMenu>
+            {conversations.map(({ title, chatId }, index) => (
+              <SidebarMenuItem key={index}>
+                <SidebarMenuButton asChild onClick={() => handleChangeChat(chatId)}>
+                  <Button variant="ghost" className="w-full justify-start">
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    <div className="flex flex-col items-start">
+                      <span className="font-medium truncate" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {title}
+                      </span>
+                    </div>
+                  </Button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+    </SidebarGroup>
   )
 }

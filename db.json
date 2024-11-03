@@ -1,0 +1,103 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "UsersTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "Users",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "UserId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "Email",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "Name",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "Avatar",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "Password",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "UserId",
+            "KeyType": "HASH"
+          }
+        ],
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "EmailIndex",
+            "KeySchema": [
+              {
+                "AttributeName": "Email",
+                "KeyType": "HASH"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            }
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST"
+      }
+    },
+    "ConversationsTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "TableName": "Conversations",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "ConversationId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "UserId",
+            "AttributeType": "S"
+          },
+          {
+            "AttributeName": "CreatedAt",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "ConversationId",
+            "KeyType": "HASH"
+          },
+          {
+            "AttributeName": "CreatedAt",
+            "KeyType": "RANGE"
+          }
+        ],
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "UserConversationsIndex",
+            "KeySchema": [
+              {
+                "AttributeName": "UserId",
+                "KeyType": "HASH"
+              },
+              {
+                "AttributeName": "CreatedAt",
+                "KeyType": "RANGE"
+              }
+            ],
+            "Projection": {
+              "ProjectionType": "ALL"
+            }
+          }
+        ],
+        "BillingMode": "PAY_PER_REQUEST"
+      }
+    }
+  }
+}

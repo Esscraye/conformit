@@ -34,10 +34,13 @@ export default function Login() {
       if (response.ok) {
         const data = await response.json()
         setUser(data.user)
-        localStorage.setItem('token', data.access_token)
+        localStorage.setItem('user', JSON.stringify(data.user))
+        const res = await fetch("http://localhost:80/custom-auth");
+        const res_data = await res.json();
+        localStorage.setItem('token', res_data.token)
         connect({
           userEnv: {},
-          accessToken: `Bearer ${data.access_token}`,
+          accessToken: `Bearer ${res_data.token}`,
         })
         navigate('/chat')
       } else {
