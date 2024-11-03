@@ -3,42 +3,51 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from chainlit.user import User
 import os
+import boto3
+
+dynamodb = boto3.resource('dynamodb', region_name='us-west-2')
+table = dynamodb.Table('UsersTable')
 
 # Configurations pour l'authentification
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")  # Utilisez une vraie clé secrète en production
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 class UserInDB(User):
     hashed_password: str
 
-# Base de données simulée des utilisateurs
-fake_users_db = {
-    "testuser@example.com": {
-        "identifier": "testuser@example.com",
-        "email": "testuser@example.com",
-        "full_name": "Test User",
-        "hashed_password": pwd_context.hash("testpassword"),
+class RegisterRequest(BaseModel):
+    email: EmailStr
+    password: str
+    full_name: str
+
+def create_user(email: str, password: str, full_name: str):
+    hashed_password = pwd_context.hash(password)
+    user = {
+        'email': email,
+        'FullName': full_name,
+        'HashedPassword': hashed_password,
     }
-}
+    table.put_item(Item=user)
+    return user
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
-def get_user(username: str):
-    if username in fake_users_db:
-        user_dict = fake_users_db[username]
-        return user_dict
+def get_user(email: str):
+    response = table.get_item(Key={'email': email})
+    if 'Item' in response:
+        return response['Item']
+    return None
 
-def authenticate_user(username: str, password: str):
-    user = get_user(username)
-    if not user or not verify_password(password, user['hashed_password']):
+def authenticate_user(email: str, password: str):
+    user = get_user(email)
+    if not user or not verify_password(password, user['HashedPassword']):
         return False
     return user
 
@@ -60,12 +69,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
+        email: str = payload.get("sub")
+        if email is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    user = get_user(username)
+    user = get_user(email)
     if user is None:
         raise credentials_exception
     return user
