@@ -14,6 +14,8 @@ from datetime import datetime
 import uuid
 import json
 import sys
+import os
+import base64
 
 load_dotenv()
 
@@ -63,11 +65,11 @@ def get_convesation_title_user(user_email):
     response = table.scan()
     items = response.get('Items', [])
 
-    items = [item for item in items if item['userEmail'] == user_email]
+    items_filtered = [item for item in items if item['userEmail'] == user_email]
 
     # get all chatid ant title in a list
     data = []
-    for item in items:
+    for item in items_filtered:
         data.append({'chatId': item['chatId'], 'title': item['title'], 'createdAt': item['createdAt']})
 
     # Sort the data by createdAt in descending order
@@ -112,6 +114,8 @@ async def delete_message_from_db(chat_id, message_id):
 
 @cl.on_chat_start
 async def on_chat_start():
+    global model_name
+    model_name = "anthropic.claude-3-sonnet-20240229-v1:0"
     llm = ChatBedrockConverse(
         model="anthropic.claude-3-sonnet-20240229-v1:0",
         region_name="us-west-2",
@@ -151,17 +155,43 @@ async def on_chat_start():
 @cl.on_message
 async def on_message(message: cl.Message):
     runnable = cast(Runnable, cl.user_session.get("runnable"))  # type: Runnable
+    # image = cl.Image(path="./.files/phoenix.jpeg", name="image1", display="inline")
 
-    msg = cl.Message(content="")
+    msg = cl.Message(content="") #, elements=[image])
     conversationId = message.to_dict()['id']
+    
+    if model_name == "stability.stable-diffusion-xl-v1":
+        client = boto3.client("bedrock-runtime", region_name="us-west-2")
+        prompt = message.content
+        native_request = {
+            "text_prompts": [{"text": prompt, "weight": 1}],
+            "cfg_scale": 10,
+            "steps": 50,
+            "seed": 0,
+            "width": 1024,
+            "height": 1024,
+            "samples": 1
+        }
+        request = json.dumps(native_request)
+        response = client.invoke_model(modelId=model_name, body=request)
+        model_response = json.loads(response["body"].read())
+        base64_image_data = model_response["artifacts"][0]["base64"]
+        image_data = base64.b64decode(base64_image_data)
+        image_path = os.path.join("output", f"image_{conversationId}.png")
+        with open(image_path, "wb") as file:
+            file.write(image_data)
+        print(f"The generated image has been saved to {image_path}.")
+        image = cl.Image(path=image_path, name="Generated Image", display="inline")
+        cl.user_session.set("image", image)
+        await cl.Message(content="Voici l'image générée :", elements=[image]).send()
+    else:
+        async for chunk in runnable.astream(
+            {"question": message.content},
+            config=RunnableConfig(callbacks=[cl.LangchainCallbackHandler()]),
+        ):
+            await msg.stream_token(chunk)
 
-    async for chunk in runnable.astream(
-        {"question": message.content},
-        config=RunnableConfig(callbacks=[cl.LangchainCallbackHandler()]),
-    ):
-        await msg.stream_token(chunk)
-
-    await msg.send()
+        await msg.send()
 
     # # Save the message to DynamoDB
     user_email = message.to_dict()['name']
@@ -186,26 +216,30 @@ async def on_chat_end():
 
 @cl.on_settings_update
 async def change_model(data):
-    print(data["ai"])
+    global model_name
     model_name = data["ai"]
     user_session = cl.user_session.get("runnable")
     if not user_session:
         return {"detail": "Chainlit user session not found"}
     
-    llm = ChatBedrockConverse(
-        model=model_name,
-        region_name="us-west-2",
-        temperature=0,
-        max_tokens=None
-    )
-    system_message = (
-        "Commence ta réponse par Bravo ! Tu as changé de modèle de langage."
-    )
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            ("system", system_message),
-            ("human", "{question}"),
-        ]
-    )
-    runnable = prompt | llm | StrOutputParser()
-    cl.user_session.set("runnable", runnable)
+    if model_name == "stability.stable-diffusion-xl-v1":
+        model_name = model_name
+        
+    else:
+        llm = ChatBedrockConverse(
+            model=model_name,
+            region_name="us-west-2",
+            temperature=0,
+            max_tokens=None
+        )
+        system_message = (
+            "Commence ta réponse par Bravo ! Tu as changé de modèle de langage."
+        )
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", system_message),
+                ("human", "{question}"),
+            ]
+        )
+        runnable = prompt | llm | StrOutputParser()
+        cl.user_session.set("runnable", runnable)

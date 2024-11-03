@@ -7,5 +7,6 @@ backend/.idea
 backend/__pycache__
 backend/.chainlit
 backend/.files
+backend/output/
 frontend/node_modules
 OneDrive_2024-11-02.zip

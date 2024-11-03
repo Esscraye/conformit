@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { v4 as uuidv4 } from "uuid";
-import { useChatInteract, useChatMessages, useChatSession, IStep } from "@chainlit/react-client";
+import { useChatInteract, useChatMessages, useChatSession, IStep, useChatData } from "@chainlit/react-client";
 import { SidebarTrigger } from "./ui/sidebar";
 import { Separator } from "./ui/separator";
 import { PlusCircle, Edit3, Trash2, Save } from "lucide-react";
@@ -27,7 +27,7 @@ interface MessageLeo {
 const aiOptions = [
   { value: 'anthropic.claude-3-sonnet-20240229-v1:0', label: 'claude-3' },
   { value: 'meta.llama3-1-405b-instruct-v1:0', label: 'llama3.1 405b' },
-  { value: 'custom-ai', label: 'Custom AI' },
+  { value: 'stability.stable-diffusion-xl-v1', label: 'SDXL' },
 ];
 
 export function Playground({ initialChatId }: PlaygroundProps) {
@@ -42,6 +42,7 @@ export function Playground({ initialChatId }: PlaygroundProps) {
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingMessageContent, setEditingMessageContent] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { elements } = useChatData();
 
   useEffect(() => {
     setChatId(localStorage.getItem("chatId") || initialChatId);
@@ -132,17 +133,17 @@ export function Playground({ initialChatId }: PlaygroundProps) {
   }, [savedMessages]);
 
   const suggestedActions = [
-    { title: "View all", label: "my cameras", action: "View all my cameras" },
-    { title: "Show me", label: "my smart home hub", action: "Show me my smart home hub" },
+    { title: "L'espace", label: "Formation Espace", action: "Propose une formation sur l'espace" },
+    { title: "Recette de cuisine", label: "cuisine en 5 min", action: "comment faire une recette de cuisine en 5 minutes ?" },
     {
-      title: "How much",
-      label: "electricity have I used this month?",
-      action: "Show electricity usage",
+      title: "Surprend moi",
+      label: "Une formation aléatoire ?",
+      action: "Propose une formation sur le thème de ton choix",
     },
     {
-      title: "How much",
-      label: "water have I used this month?",
-      action: "Show water usage",
+      title: "Gagné ConformIt",
+      label: "Comment gagner ConformIt ?",
+      action: "Explique comment gagner le hackaton ConformIt",
     },
   ];
 
@@ -230,27 +231,15 @@ export function Playground({ initialChatId }: PlaygroundProps) {
 
   const handleChangeModel = async (modelName: string) => {
     setSelectedAI(modelName);
-    // try {
-    //   const response = await fetch(`http://localhost:80/change-model`, {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify({ model_name: modelName }),
-    //   });
-    //   if (response.ok) {
-    //     const data = await response.json();
-    //     console.log(data);
-    //   } else {
-    //     console.error('Failed to change model');
-    //   }
-    // } catch (error) {
-    //   console.error('Error changing model:', error);
-    // }
     updateChatSettings({ ai: modelName });
   };
 
-  const renderMessage = (message: IStep) => {
+    const renderMessage = (message: IStep) => {
+    let imageUrl = '';
+    if (elements.length > 0) {
+      imageUrl = elements[0].url || '';
+    }
+  
     const dateOptions: Intl.DateTimeFormatOptions = {
       hour: "2-digit",
       minute: "2-digit",
@@ -259,6 +248,7 @@ export function Playground({ initialChatId }: PlaygroundProps) {
       undefined,
       dateOptions
     );
+  
     return (
       <div key={message.id} className="flex items-start space-x-2 mb-4">
         <div className="w-20 text-sm text-green-500">{message.name === 'Assistant' ? 'Assistant' : 'User'}</div>
@@ -277,7 +267,11 @@ export function Playground({ initialChatId }: PlaygroundProps) {
             <>
               <ReactMarkdown remarkPlugins={[remarkGfm]} className="discussion text-black dark:text-white">{message.output}</ReactMarkdown>
               <small className="text-xs text-gray-500">{date}</small>
-              {message.name !== 'Assistant' && editingMessageId !== message.id && (
+                {console.log(message)}
+                {(message.output === "" || message.output === "Voici l'image générée :") && imageUrl && (
+                <img src={imageUrl} alt="Message related" className="mt-2" />
+                )}
+                {message.name !== 'Assistant' && editingMessageId !== message.id && (
                 <div className="flex space-x-2">
                   <Button variant="ghost" size="icon" onClick={() => handleEditMessage(message.id)}>
                     <Edit3 size={16} />
