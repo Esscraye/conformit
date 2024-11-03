@@ -1,3 +1,4 @@
+from urllib import request
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
@@ -21,7 +22,7 @@ from auth import (
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
 
-from cl_app import ( get_convesation_title_user, get_conversation_messages)
+from cl_app import ( get_convesation_title_user, get_conversation_messages, delete_message_from_db)
 
 load_dotenv()
 
@@ -97,5 +98,16 @@ async def get_messages(thread_id: str):
             detail="No messages found for this thread",
         )
     return {"messages": messages}
+
+@app.delete("/messages/{chat_id}/{message_id}")
+async def delete_message(chat_id: str, message_id: str):
+    response = await delete_message_from_db(chat_id, message_id)
+    if not response:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Message not found",
+        )
+    return JSONResponse(content={"detail": "Message deleted successfully"})
+
 
 mount_chainlit(app=app, target="cl_app.py", path="/chainlit")

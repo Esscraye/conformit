@@ -7,9 +7,11 @@ import { v4 as uuidv4 } from "uuid";
 import { useChatInteract, useChatMessages, useChatSession, IStep } from "@chainlit/react-client";
 import { SidebarTrigger } from "./ui/sidebar";
 import { Separator } from "./ui/separator";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Edit3, Trash2, Save } from "lucide-react";
 import { useRecoilValue } from "recoil";
 import { userState } from "@/atoms/userAtom";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from 'remark-gfm';
 
 interface PlaygroundProps {
   initialChatId: string;
@@ -30,6 +32,8 @@ export function Playground({ initialChatId }: PlaygroundProps) {
   const { connect } = useChatSession();
   const [savedMessages, setSavedMessages] = useState<IStep[]>([]);
   const [chatId, setChatId] = useState(initialChatId);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingMessageContent, setEditingMessageContent] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -181,6 +185,41 @@ export function Playground({ initialChatId }: PlaygroundProps) {
     reconnect();
   };
 
+  const handleEditMessage = (messageId: string) => {
+    const message = savedMessages.find((msg) => msg.id === messageId);
+    if (message) {
+      setEditingMessageId(messageId);
+      setEditingMessageContent(message.output);
+    }
+  };
+
+  const handleSaveEditMessage = async () => {
+    if (editingMessageId) {
+      await handleDeleteMessage(editingMessageId);
+      handleSendMessage(editingMessageContent);
+      setEditingMessageId(null);
+      setEditingMessageContent("");
+    }
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    const response = await fetch(`http://localhost:80/messages/${chatId}/${messageId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (response.ok) {
+      setSavedMessages((prev) => {
+        const index = prev.findIndex((msg) => msg.id === messageId);
+        if (index !== -1) {
+          return prev.slice(0, index);
+        }
+        return prev;
+      });
+    }
+  };
+
   const renderMessage = (message: IStep) => {
     const dateOptions: Intl.DateTimeFormatOptions = {
       hour: "2-digit",
@@ -194,8 +233,32 @@ export function Playground({ initialChatId }: PlaygroundProps) {
       <div key={message.id} className="flex items-start space-x-2 mb-4">
         <div className="w-20 text-sm text-green-500">{message.name === 'Assistant' ? 'Assistant' : 'User'}</div>
         <div className="flex-1 border rounded-lg p-2">
-          <p className="text-black dark:text-white">{message.output}</p>
-          <small className="text-xs text-gray-500">{date}</small>
+          {editingMessageId === message.id ? (
+            <div className="flex items-center space-x-2">
+              <Input
+                value={editingMessageContent}
+                onChange={(e) => setEditingMessageContent(e.target.value)}
+              />
+              <Button variant="ghost" size="icon" onClick={handleSaveEditMessage}>
+                <Save size={16} />
+              </Button>
+            </div>
+          ) : (
+            <>
+              <ReactMarkdown remarkPlugins={[remarkGfm]} className="discussion text-black dark:text-white">{message.output}</ReactMarkdown>
+              <small className="text-xs text-gray-500">{date}</small>
+              {message.name !== 'Assistant' && editingMessageId !== message.id && (
+                <div className="flex space-x-2">
+                  <Button variant="ghost" size="icon" onClick={() => handleEditMessage(message.id)}>
+                    <Edit3 size={16} />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => handleDeleteMessage(message.id)}>
+                    <Trash2 size={16} />
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     );
@@ -212,6 +275,7 @@ export function Playground({ initialChatId }: PlaygroundProps) {
           </Button>
         </div>
       </header>
+      
       <ScrollArea className="flex-1 p-6">
         <div className="space-y-4">
           {savedMessages.map((message) => renderMessage(message))}
@@ -252,8 +316,14 @@ export function Playground({ initialChatId }: PlaygroundProps) {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyUp={(e) => {
-              if (e.key === "Enter") {
+              if (e.key === "Enter" && !e.shiftKey) {
                 handleSendMessage();
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && e.shiftKey) {
+                e.preventDefault();
+                setInputValue((prev) => prev + "\n");
               }
             }}
           />

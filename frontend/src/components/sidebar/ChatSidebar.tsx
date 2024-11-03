@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sidebar,
   SidebarContent,
@@ -12,6 +11,8 @@ import {
   SidebarFooter,
   SidebarProvider,
   SidebarInset,
+  SidebarGroup,
+  SidebarGroupLabel,
 } from "@/components/ui/sidebar";
 import { MessageCircle } from "lucide-react";
 // import { useChatMessages, IStep } from "@chainlit/react-client"
@@ -42,6 +43,8 @@ import { useNavigate } from "react-router-dom";
 import { useRecoilValue, useResetRecoilState, useSetRecoilState } from "recoil";
 import { userState } from "@/atoms/userAtom";
 import { useChatSession } from "@chainlit/react-client";
+
+
 
 export function ChatSidebar() {
   const setUser = useSetRecoilState(userState);
@@ -112,22 +115,7 @@ export function ChatSidebar() {
           <h2 className="text-lg font-semibold">Chat History</h2>
         </SidebarHeader>
         <SidebarContent>
-          <ScrollArea className="h-[calc(100vh-5rem)]">
-            <SidebarMenu>
-              {conversations.map(({ title, chatId }, index) => (
-                <SidebarMenuItem key={index}>
-                  <SidebarMenuButton asChild onClick={() => handleChangeChat(chatId)}>
-                    <Button variant="ghost" className="w-full justify-start">
-                      <MessageCircle className="mr-2 h-4 w-4" />
-                      <div className="flex flex-col items-start">
-                        <span className="font-medium">{title}</span>
-                      </div>
-                    </Button>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </ScrollArea>
+          <NavConversations handleChangeChat={handleChangeChat} conversations={conversations} />
         </SidebarContent>
         <SidebarFooter>
           <SidebarMenu>
@@ -211,4 +199,37 @@ export function ChatSidebar() {
       </SidebarInset>
     </SidebarProvider>
   );
+}
+
+function NavConversations({
+  handleChangeChat,
+  conversations,
+}: {
+  conversations: {
+    title: string;
+    chatId: string;    
+  }[];
+  handleChangeChat: (chatId: string) => void;
+}) {
+  return (
+    <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+      <SidebarGroupLabel>Aujourd'hui</SidebarGroupLabel>
+          <SidebarMenu>
+            {conversations.map(({ title, chatId }, index) => (
+              <SidebarMenuItem key={index}>
+                <SidebarMenuButton asChild onClick={() => handleChangeChat(chatId)}>
+                  <Button variant="ghost" className="w-full justify-start">
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    <div className="flex flex-col items-start">
+                      <span className="font-medium truncate" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {title}
+                      </span>
+                    </div>
+                  </Button>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+    </SidebarGroup>
+  )
 }

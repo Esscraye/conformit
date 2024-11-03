@@ -83,6 +83,33 @@ def get_conversation_messages(chat_id):
 
     return messages 
 
+async def delete_message_from_db(chat_id, message_id):
+    # Récupérer les messages du chat spécifié
+    response = table.get_item(Key={'chatId': chat_id})
+    if 'Item' not in response:
+        return None
+
+    messages = response['Item']['messages']
+
+    # Trouver l'index du message à supprimer
+    message_index = next((index for (index, d) in enumerate(messages) if d["messageId"] == message_id), None)
+
+    if message_index is not None:
+        # Supprimer tous les messages à partir de cet index
+        messages = messages[:message_index]
+
+        # Mettre à jour la table avec la nouvelle liste de messages
+        table.update_item(
+            Key={'chatId': chat_id},
+            UpdateExpression="SET messages = :messages",
+            ExpressionAttributeValues={
+                ':messages': messages
+            }
+        )
+        return True
+
+    return None
+
 @cl.on_chat_start
 async def on_chat_start():
     llm = ChatBedrockConverse(
@@ -91,12 +118,28 @@ async def on_chat_start():
         temperature=0,
         max_tokens=None
     )
+    system_message = (
+        "Tu es un expert en création de formations sur tous les sujets. "
+        "Rédige les formations en Markdown. "
+        "N'hésite pas à ajouter des emojis pour rendre le contenu plus engageant "
+    )
+    preprompt = (
+        "Avant de commencer, voici quelques conseils pour structurer une formation efficace :\n"
+        "1. **Introduction** : Commence par une brève introduction du sujet.\n"
+        "2. **Objectifs** : Énonce clairement les objectifs d'apprentissage.\n"
+        "3. **Contenu** : Divise le contenu en sections logiques avec des titres de niveau 2.\n"
+        "4. **Exemples** : Utilise des exemples concrets pour illustrer les points clés.\n"
+        "5. **Résumé** : Termine par un résumé des points importants.\n"
+        "6. **Quiz** : Ajoute un quiz à la fin pour tester les connaissances acquises.\n"
+        "7. **Ressources** : Fournis des ressources supplémentaires pour approfondir le sujet.\n"
+        "8. **Interactivité** : Utilise des questions ouvertes et des activités interactives pour engager les apprenants.\n"
+        "9. **Feedback** : Encourage les apprenants à donner leur feedback pour améliorer la formation.\n"
+        "10. **Conclusion** : Conclus avec une note positive et encourageante."
+    )
     prompt = ChatPromptTemplate.from_messages(
         [
-            (
-                "system",
-                "You are a helpful assistant.",
-            ),
+            ("system", system_message),
+            ("system", preprompt),
             ("human", "{question}"),
         ]
     )
